@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Server Monitor</title>
+<link rel="stylesheet" href="./server.css">
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="brand">
+      <a class="navlink" href="../">&#9666; DASHBOARD</a>
+      <span class="logo"></span>
+      <div class="ident"><h1 id="host">SERVER</h1><div id="os" class="sub">--</div></div>
+      <span id="sampleBadge" class="badge" hidden>SAMPLE DATA</span>
+    </div>
+    <div class="hmid">
+      <span id="health" class="pill" data-s="ok">--</span>
+      <div id="upd" class="upd">Updated <b id="updAgo">--</b> <span id="staleTag" class="tag" hidden></span><span id="fetchErr" class="tag amber" hidden>FETCH ERR</span></div>
+    </div>
+    <div class="clockbox"><div id="clock" class="clock">--:--</div><div id="date" class="date">&nbsp;</div></div>
+  </header>
+
+  <section class="panel g-cpu"><h2>CPU</h2>
+    <div class="gwrap"><div class="ring" id="ringCpu"><span id="cpuV" class="rv">--</span></div>
+      <div class="gtxt"><div class="gl" id="cpuTemp">--</div><div class="gs" id="cpuSub">--</div></div></div></section>
+  <section class="panel g-mem"><h2>Memory</h2>
+    <div class="gwrap"><div class="ring" id="ringMem"><span id="memV" class="rv">--</span></div>
+      <div class="gtxt"><div class="gl" id="memUsed">--</div><div class="gs" id="memSub">--</div></div></div></section>
+  <section class="panel g-disk"><h2>Disk /</h2>
+    <div class="gwrap"><div class="ring" id="ringDisk"><span id="diskV" class="rv">--</span></div>
+      <div class="gtxt"><div class="gl" id="diskUsed">--</div><div class="gs" id="diskSub">--</div></div></div></section>
+  <section class="panel g-up"><h2>Uptime</h2>
+    <div class="upbig" id="upV">--</div>
+    <div class="gs" id="upSub">--</div>
+    <div class="loads"><div><b id="l1">--</b><span>1 min</span></div><div><b id="l5">--</b><span>5 min</span></div><div><b id="l15">--</b><span>15 min</span></div></div>
+  </section>
+
+  <section class="panel p-hist"><h2>Last hour <span class="lg"><i class="c1"></i>CPU <i class="c2"></i>MEM</span></h2>
+    <div class="chartwrap"><canvas id="chart"></canvas></div></section>
+  <section class="panel p-net"><h2>Network</h2>
+    <dl class="kv" id="net"></dl></section>
+  <section class="panel p-svc"><h2>Services</h2>
+    <ul class="svcs" id="svcs"></ul></section>
+
+  <section class="panel p-upd"><h2>Updates</h2>
+    <dl class="kv" id="upd2"></dl></section>
+  <section class="panel p-fb"><h2>First boot <span id="fbPill" class="pill sm" data-s="ok">--</span></h2>
+    <pre id="fbLog" class="log"></pre></section>
+  <section class="panel p-top"><h2>Top processes</h2>
+    <table class="procs"><thead><tr><th>Name</th><th>CPU</th><th>MEM</th></tr></thead><tbody id="procs"></tbody></table></section>
+</div>
+<script src="./server.js"></script>
+</body>
+</html>

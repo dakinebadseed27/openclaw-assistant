@@ -72,7 +72,7 @@ $PubKey = (Get-Content $PubKeyPath -Raw).Trim()
 if ($PubKey -notmatch '^ssh-ed25519 ') { Stop-Here "$PubKeyPath doesn't look like an ed25519 public key." }
 Ok "SSH key: $PubKeyPath"
 
-foreach ($f in @('installer\autoinstall.template.yaml', 'payload\firstboot\rogue-firstboot.sh', 'payload\firstboot\rogue-firstboot.service', 'dashboard\index.html', 'dashboard\data\meta.json')) {
+foreach ($f in @('installer\autoinstall.template.yaml', 'payload\firstboot\rogue-firstboot.sh', 'payload\firstboot\rogue-firstboot.service', 'payload\status\rogue-status.py', 'dashboard\index.html', 'dashboard\server\index.html', 'dashboard\data\meta.json')) {
   if (-not (Test-Path (Join-Path $Root $f))) { Stop-Here "Missing $f. Run this from the rogue-server folder you downloaded." }
 }
 Ok 'Build files present'
@@ -151,7 +151,8 @@ if (Test-Path $Staging) { Remove-Item $Staging -Recurse -Force }
 New-Item -ItemType Directory -Force -Path (Join-Path $Staging 'payload') | Out-Null
 Copy-Item (Join-Path $Root 'dashboard') (Join-Path $Staging 'payload\dashboard') -Recurse
 Copy-Item (Join-Path $Root 'payload\firstboot') (Join-Path $Staging 'payload\firstboot') -Recurse
-foreach ($f in Get-ChildItem (Join-Path $Staging 'payload\firstboot') -File) { Write-Lf $f.FullName ([IO.File]::ReadAllText($f.FullName)) }
+Copy-Item (Join-Path $Root 'payload\status') (Join-Path $Staging 'payload\status') -Recurse
+foreach ($f in Get-ChildItem (Join-Path $Staging 'payload\firstboot'), (Join-Path $Staging 'payload\status') -File) { Write-Lf $f.FullName ([IO.File]::ReadAllText($f.FullName)) }
 
 $yaml = [IO.File]::ReadAllText((Join-Path $Root 'installer\autoinstall.template.yaml'))
 $yaml = $yaml.Replace('__HOSTNAME__', $Hostname).Replace('__USERNAME__', $Username).Replace('__PASSWORD_HASH__', $PwHash).Replace('__SSH_PUBKEY__', $PubKey)
@@ -228,6 +229,8 @@ $checks = @(
   @{ n = 'autoinstall.yaml on USB'; ok = Test-Path (Join-Path $Usb 'autoinstall.yaml') },
   @{ n = 'payload\dashboard on USB'; ok = Test-Path (Join-Path $Usb 'payload\dashboard\index.html') },
   @{ n = 'payload\firstboot on USB'; ok = Test-Path (Join-Path $Usb 'payload\firstboot\rogue-firstboot.sh') },
+  @{ n = 'payload\status on USB';    ok = Test-Path (Join-Path $Usb 'payload\status\rogue-status.py') },
+  @{ n = 'Server monitor on USB';    ok = Test-Path (Join-Path $Usb 'payload\dashboard\server\index.html') },
   @{ n = 'Tailscale key on USB';     ok = (Get-Item (Join-Path $Usb 'payload\ts-authkey')).Length -gt 20 },
   @{ n = 'GRUB autoinstall keyword'; ok = $g -match 'linux\s+\S+.*\sautoinstall\s+---' },
   @{ n = 'GRUB timeout 3';           ok = $g -match 'set\s+timeout=3' }

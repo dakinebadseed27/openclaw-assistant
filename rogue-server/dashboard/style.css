@@ -92,3 +92,5 @@ h2{font-size:.95rem;font-weight:600;letter-spacing:.18em;text-transform:uppercas
   .toast{font-size:1rem}
 }
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
+.navlink{font:600 .8rem var(--mono);letter-spacing:.1em;color:var(--muted);text-decoration:none;border:1px solid var(--line2);border-radius:.25rem;padding:.2rem .5rem;white-space:nowrap}
+.navlink:hover,.navlink:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}

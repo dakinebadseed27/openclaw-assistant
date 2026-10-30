@@ -1,0 +1,7 @@
+[Unit]
+Description=Rogue Server status snapshot for the server monitor page
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/sbin/rogue-status.py
+Nice=10

@@ -55,6 +55,12 @@ autoinstall:
     - sed -i 's/\r$//' /target/usr/local/sbin/rogue-firstboot.sh /target/etc/systemd/system/rogue-firstboot.service
     - sed -i 's/\r$//' /target/root/.ts-authkey
     - curtin in-target --target=/target -- systemctl enable rogue-firstboot.service
+    # Server monitor: status collector writes /srv/dashboard/server/status.json every 30s
+    - install -m 0755 /cdrom/payload/status/rogue-status.py /target/usr/local/sbin/rogue-status.py
+    - install -m 0644 /cdrom/payload/status/rogue-status.service /target/etc/systemd/system/rogue-status.service
+    - install -m 0644 /cdrom/payload/status/rogue-status.timer /target/etc/systemd/system/rogue-status.timer
+    - sed -i 's/\r$//' /target/usr/local/sbin/rogue-status.py /target/etc/systemd/system/rogue-status.service /target/etc/systemd/system/rogue-status.timer
+    - curtin in-target --target=/target -- systemctl enable rogue-status.timer
     # Never sleep, reboot 10s after a kernel panic
     - curtin in-target --target=/target -- systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
     - echo 'kernel.panic = 10' > /target/etc/sysctl.d/99-autoreboot.conf
