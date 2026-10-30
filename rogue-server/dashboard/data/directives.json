@@ -1,0 +1,10 @@
+{
+  "_note": "SAMPLE DATA",
+  "directives": [
+    { "priority": "high", "text": "Send revised counter-offer on Kahala Ave listing" },
+    { "priority": "high", "text": "Confirm title company for Kakaako condo closing" },
+    { "priority": "med",  "text": "Follow up with 4 new Kailua open-house leads" },
+    { "priority": "med",  "text": "Approve photo set for Manoa townhome" },
+    { "priority": "low",  "text": "Update weekly seller report drafts" }
+  ]
+}

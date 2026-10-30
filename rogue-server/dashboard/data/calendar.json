@@ -1,0 +1,11 @@
+{
+  "_note": "SAMPLE DATA",
+  "events": [
+    { "time": "08:30", "title": "Coffee with lender (pre-approvals)" },
+    { "time": "10:00", "title": "Listing photos - Manoa townhome" },
+    { "time": "11:30", "title": "Buyer consult - Kailua" },
+    { "time": "13:30", "title": "Walkthrough - Kakaako condo" },
+    { "time": "15:00", "title": "Seller call - Kahala Ave" },
+    { "time": "17:30", "title": "Open house setup - Hawaii Kai" }
+  ]
+}

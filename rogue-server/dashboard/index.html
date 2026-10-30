@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rogue Server</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="brand"><span class="logo"></span><h1>ROGUE SERVER</h1><span id="sampleBadge" class="badge" hidden>SAMPLE DATA</span></div>
+    <div id="upd" class="upd">Last data update: <b id="updTime">--</b><span id="metaErr" class="errdot" hidden>DATA ERR</span></div>
+    <div class="clockbox"><div id="clock" class="clock">--:--</div><div id="date" class="date">&nbsp;</div></div>
+  </header>
+
+  <section class="panel p-dir" id="p-directives">
+    <h2>Today's Directives</h2>
+    <ol id="directives" class="dirs"></ol>
+  </section>
+
+  <section class="panel p-cal" id="p-calendar">
+    <h2>Today's Calendar</h2>
+    <ul id="calendar" class="cal"></ul>
+  </section>
+
+  <section class="panel p-hive" id="p-agents">
+    <h2>Hive Mind</h2>
+    <div class="hivewrap"><canvas id="hive"></canvas></div>
+    <ul id="legend" class="legend"></ul>
+  </section>
+
+  <section class="panel p-skills" id="p-skills">
+    <h2>Skills</h2>
+    <div id="skills" class="skills"></div>
+  </section>
+
+  <section class="panel p-vit" id="p-vitals">
+    <h2>Business Vitals</h2>
+    <div id="vitals" class="vitals"></div>
+  </section>
+
+  <section class="panel p-tok" id="p-tokens">
+    <h2>AI Token Usage</h2>
+    <div class="tokmain"><div id="tokTotal" class="big">--</div><div id="tokSub" class="muted">today</div></div>
+    <div id="tokBar" class="budget" hidden><i></i></div>
+    <div id="tokBars" class="bars"></div>
+  </section>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="./app.js"></script>
+</body>
+</html>

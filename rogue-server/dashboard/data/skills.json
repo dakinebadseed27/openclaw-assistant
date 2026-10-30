@@ -1,0 +1,11 @@
+{
+  "_note": "SAMPLE DATA",
+  "skills": [
+    { "id": "listing-reach", "label": "Listing Reach", "sub": "Weekly report" },
+    { "id": "seller-update", "label": "Seller Update", "sub": "Draft message" },
+    { "id": "lead-followup", "label": "Lead Follow-up", "sub": "Next actions" },
+    { "id": "market-stats", "label": "Market Stats", "sub": "Honolulu" },
+    { "id": "carousel", "label": "Carousel", "sub": "Listing post" },
+    { "id": "morning-brief", "label": "Morning Brief", "sub": "Daily summary" }
+  ]
+}

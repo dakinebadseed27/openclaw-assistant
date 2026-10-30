@@ -1,0 +1,12 @@
+{
+  "_note": "SAMPLE DATA",
+  "folders": ["Listings", "Clients", "Leads", "Contracts", "Market Research", "Marketing", "Closings", "Templates"],
+  "agents": [
+    { "name": "Scout", "status": "active", "folder": "Market Research" },
+    { "name": "Quill", "status": "active", "folder": "Marketing" },
+    { "name": "Ledger", "status": "active", "folder": "Contracts" },
+    { "name": "Relay", "status": "idle", "folder": null },
+    { "name": "Sentry", "status": "idle", "folder": null },
+    { "name": "Archivist", "status": "error", "folder": "Clients" }
+  ]
+}

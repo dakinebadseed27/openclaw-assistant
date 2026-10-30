@@ -1,0 +1,13 @@
+[Unit]
+Description=Rogue Server first boot (join Tailscale, serve dashboard)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/rogue-firstboot.sh
+RemainAfterExit=yes
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

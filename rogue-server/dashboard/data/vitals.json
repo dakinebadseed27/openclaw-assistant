@@ -1,0 +1,9 @@
+{
+  "_note": "SAMPLE DATA",
+  "tiles": [
+    { "label": "Active Listings", "value": 12, "sub": "+2 this week" },
+    { "label": "Pending Deals", "value": 5, "sub": "2 need action" },
+    { "label": "New Leads", "value": 18, "sub": "last 7 days" },
+    { "label": "Closings This Month", "value": 3, "sub": "2 more scheduled" }
+  ]
+}

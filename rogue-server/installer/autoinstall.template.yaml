@@ -1,0 +1,65 @@
+# Rogue Server autoinstall (Ubuntu Server 26.04.1 LTS, on-media format).
+# Template only. Prepare-RogueUSB.ps1 fills the __PLACEHOLDERS__ on the laptop
+# and writes the result to the USB root as autoinstall.yaml.
+autoinstall:
+  version: 1
+  interactive-sections: []
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  timezone: America/Los_Angeles
+  refresh-installer:
+    update: false
+  source:
+    id: ubuntu-server
+  network:
+    version: 2
+    ethernets:
+      wired:
+        match:
+          name: "en*"
+        dhcp4: true
+        optional: true
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+      match:
+        size: largest
+  identity:
+    hostname: __HOSTNAME__
+    username: __USERNAME__
+    realname: __USERNAME__
+    password: '__PASSWORD_HASH__'
+  ssh:
+    install-server: true
+    allow-pw: true
+    authorized-keys:
+      - '__SSH_PUBKEY__'
+  packages:
+    - avahi-daemon
+    - curl
+    - git
+    - tmux
+    - htop
+    - unattended-upgrades
+  late-commands:
+    # Dashboard files
+    - mkdir -p /target/srv/dashboard
+    - cp -r /cdrom/payload/dashboard/. /target/srv/dashboard/
+    - chmod -R u=rwX,go=rX /target/srv/dashboard
+    # First-boot service, script, and Tailscale key (CRs stripped in case Windows added any)
+    - install -m 0755 /cdrom/payload/firstboot/rogue-firstboot.sh /target/usr/local/sbin/rogue-firstboot.sh
+    - install -m 0644 /cdrom/payload/firstboot/rogue-firstboot.service /target/etc/systemd/system/rogue-firstboot.service
+    - install -m 0600 /cdrom/payload/ts-authkey /target/root/.ts-authkey
+    - sed -i 's/\r$//' /target/usr/local/sbin/rogue-firstboot.sh /target/etc/systemd/system/rogue-firstboot.service
+    - sed -i 's/\r$//' /target/root/.ts-authkey
+    - curtin in-target --target=/target -- systemctl enable rogue-firstboot.service
+    # Never sleep, reboot 10s after a kernel panic
+    - curtin in-target --target=/target -- systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+    - echo 'kernel.panic = 10' > /target/etc/sysctl.d/99-autoreboot.conf
+    # Automatic security updates
+    - printf 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\n' > /target/etc/apt/apt.conf.d/20auto-upgrades
+    - curtin in-target --target=/target -- systemctl enable unattended-upgrades.service
+  # Power off (not reboot) so it can't loop back into the installer. Tower off = done.
+  shutdown: poweroff
