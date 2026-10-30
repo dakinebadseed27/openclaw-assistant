@@ -7,7 +7,7 @@ After=network-online.target
 Type=oneshot
 ExecStart=/usr/local/sbin/rogue-firstboot.sh
 RemainAfterExit=yes
-TimeoutStartSec=0
+TimeoutStartSec=45min
 
 [Install]
 WantedBy=multi-user.target

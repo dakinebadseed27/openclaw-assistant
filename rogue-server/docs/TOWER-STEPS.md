@@ -9,7 +9,9 @@ Do these after `START-HERE.cmd` says DONE and the USB is ejected. Install the to
    - No light: hardware problem. Stop here.
 2. Plug the tower into the Netgear router with an Ethernet cable. Insert the Rogue USB. Power on.
 3. Walk away. The tower installs itself and then **turns itself off**. That takes 15 to 40 minutes. Off means done.
-4. Pull the USB out. Power the tower on again.
+4. **Pull the USB out before you power on again.** If the tower boots from the USB a second time, it wipes the disk and reinstalls without asking. Then power on.
+
+Heads up: the installer uses the **largest** drive in the tower. If it has both an SSD and a bigger hard drive, Ubuntu goes on the hard drive. Fine for now, and easy to change later.
 
 ## Check it
 

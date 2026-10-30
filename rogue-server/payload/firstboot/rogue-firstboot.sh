@@ -15,21 +15,23 @@ fail() { log "FAILED: $*  (service stays enabled, will retry next boot)"; exit 1
 
 log "=== first boot start on $(hostname) ==="
 
-# 1. Wait for internet, up to 15 minutes (90 x 10s).
-online=0
-for i in $(seq 1 90); do
-  if curl -fsS --max-time 8 -o /dev/null https://pkgs.tailscale.com/; then
-    online=1; log "internet up after $((i * 10 - 10))s"; break
-  fi
+# 1. Wait for internet, up to 15 minutes.
+deadline=$(( $(date +%s) + 900 ))
+until curl -fsS --max-time 8 -o /dev/null https://pkgs.tailscale.com/; do
+  [ "$(date +%s)" -lt "$deadline" ] || fail "no internet after 15 minutes"
   sleep 10
 done
-[ "$online" = 1 ] || fail "no internet after 15 minutes"
+log "internet up"
 
-# 2. Install Tailscale (official installer) unless it's already there.
-if ! command -v tailscale >/dev/null 2>&1; then
-  log "installing tailscale"
-  curl -fsSL https://tailscale.com/install.sh | sh || fail "tailscale install script"
-fi
+# 2. Install Tailscale (official installer) unless it's already there. Retries
+#    cover apt locks and mirror hiccups.
+for attempt in 1 2 3 4 5; do
+  command -v tailscale >/dev/null 2>&1 && break
+  log "installing tailscale (attempt $attempt)"
+  curl -fsSL --max-time 60 https://tailscale.com/install.sh | timeout 600 sh && command -v tailscale >/dev/null 2>&1 && break
+  sleep 60
+done
+command -v tailscale >/dev/null 2>&1 || fail "tailscale install script"
 systemctl enable --now tailscaled || fail "could not start tailscaled"
 
 # 3. Join the tailnet (skip if a previous attempt already got us in).
@@ -51,8 +53,13 @@ log "tailscale IP: $(tailscale ip -4 2>/dev/null | head -1)"
 
 # 4. Serve the dashboard folder over HTTPS, tailnet only. --bg config is saved
 #    by tailscaled and survives reboots. Requires MagicDNS + HTTPS certs on.
+#    serve can exit 0 or hang without configuring anything when HTTPS is off,
+#    so bound it and confirm it actually took.
 tailscale serve reset || true
-tailscale serve --bg "$DASH" || fail "tailscale serve"
+timeout 120 tailscale serve --bg "$DASH" < /dev/null
+if ! tailscale serve status 2>/dev/null | grep -q "$DASH"; then
+  fail "tailscale serve not configured (check MagicDNS and HTTPS Certificates in Tailscale admin > DNS)"
+fi
 tailscale serve status
 
 # 5. Done: destroy the key and switch this service off.

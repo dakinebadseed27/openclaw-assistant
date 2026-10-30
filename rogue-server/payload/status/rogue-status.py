@@ -171,8 +171,14 @@ def tailscale():
 def services():
     res = []
     for unit, label in SERVICES:
-        _, out, _ = run(["systemctl", "is-active", unit], timeout=5)
-        res.append({"name": unit, "label": label, "state": out.strip() or "unknown"})
+        # Ubuntu starts sshd on demand via ssh.socket, so either unit counts as up.
+        units = ["ssh.socket", "ssh.service"] if unit == "ssh" else [unit]
+        states = []
+        for u in units:
+            _, out, _ = run(["systemctl", "is-active", u], timeout=5)
+            states.append(out.strip() or "unknown")
+        state = "active" if "active" in states else states[0]
+        res.append({"name": unit, "label": label, "state": state})
     return res
 
 

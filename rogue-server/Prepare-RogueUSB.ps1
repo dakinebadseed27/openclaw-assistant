@@ -48,7 +48,7 @@ function Write-Lf($path, $text) {
 Say 'Step 1 of 7: checking the laptop'
 
 $drive = Get-PSDrive -Name ($Root.Substring(0,1))
-if ($drive.Free -lt 6GB) { Stop-Here ("Need about 6 GB free on {0}: , found {1:N1} GB." -f $drive.Name, ($drive.Free/1GB)) }
+if ($drive.Free -lt 6GB) { Stop-Here ("Need about 6 GB free on drive {0}:, found {1:N1} GB." -f $drive.Name, ($drive.Free/1GB)) }
 Ok ("{0:N1} GB free" -f ($drive.Free/1GB))
 
 $openssl = $null
@@ -63,7 +63,7 @@ Ok "OpenSSL: $openssl"
 if (-not (Get-Command ssh-keygen.exe -ErrorAction SilentlyContinue)) { Stop-Here 'ssh-keygen not found. Turn on Windows "OpenSSH Client" (Settings > Apps > Optional features).' }
 $PubKeyPath = Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'
 if (-not (Test-Path $PubKeyPath)) {
-  Say 'No SSH key yet. Creating one now. Press Enter to accept the default file, then pick a passphrase (or Enter twice for none).'
+  Say 'No SSH key yet. Creating one now. Pick a passphrase (or Enter twice for none).'
   New-Item -ItemType Directory -Force -Path (Split-Path $PubKeyPath) | Out-Null
   & ssh-keygen.exe -t ed25519 -f (Join-Path $env:USERPROFILE '.ssh\id_ed25519')
   if (-not (Test-Path $PubKeyPath)) { Stop-Here 'SSH key was not created.' }
@@ -83,6 +83,7 @@ New-Item -ItemType Directory -Force -Path $IsoDir | Out-Null
 
 try {
   $sums = (& curl.exe -fsSL $SumsUrl) -join "`n"
+  if ($LASTEXITCODE -ne 0) { throw 'download failed' }
   $live = ($sums -split "`n" | Where-Object { $_ -match [regex]::Escape($IsoName) }) -replace '\s.*$', ''
   if ($live -and $live -ne $IsoSha256) { Stop-Here "Ubuntu's SHA256SUMS lists a different hash than this script expects. Not guessing. Ask Claude to recheck." }
   if ($live) { Ok 'Live SHA256SUMS matches the expected hash' }
@@ -108,6 +109,10 @@ Say 'Step 3 of 7: your inputs'
 
 $Username = (Read-Host 'Linux username (lowercase, e.g. kaliko)').Trim()
 if ($Username -notmatch '^[a-z_][a-z0-9_-]{0,31}$') { Stop-Here 'Username must be lowercase letters/numbers, starting with a letter.' }
+# Names the Ubuntu installer refuses (from subiquity's reserved-usernames). A refusal
+# would stop the install on a screen nobody can see, so catch it here.
+$Reserved = @('Debian-exim','adm','admin','alias','asterisk','audio','backup','bin','bind','cdrom','ceph','crontab','cupsys','daemon','dcc','dhcp','dialout','dictd','dip','disk','dnsmasq','dovecot','fax','fetchmail','firebird','floppy','ftn','ftp','fuse','games','gdm','gnats','grsec-proc','grsec-sock-all','grsec-sock-clt','grsec-sock-srv','grsec-tpe','haclient','hacluster','haldaemon','hplilp','identd','input','irc','jwhois','klog','kmem','kvm','libvirt-qemu','list','lp','lpadmin','maas','mail','man','messagebus','mysql','mythtv','netdev','netplan','news','nobody','nogroup','opensrf','operator','plugdev','powerdev','proxy','qmail','qmaild','qmaill','qmailp','qmailq','qmailr','qmails','radvd','render','root','saned','sasl','sbuild','scanner','sgx','shadow','slocate','slurm','src','ssh','sshd','ssl-cert','sslwrap','staff','statd','sudo','sync','sys','syslog','tac-plus','tape','telnetd','tftpd','tty','users','utmp','uucp','vchkpw','video','voice','vpopmail','www-data')
+if ($Reserved -contains $Username) { Stop-Here "'$Username' is reserved by Ubuntu. Pick another username." }
 $Hostname = (Read-Host 'Hostname [rogue-server]').Trim()
 if (-not $Hostname) { $Hostname = 'rogue-server' }
 if ($Hostname -notmatch '^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$') { Stop-Here 'Hostname must be lowercase letters, numbers, and dashes.' }
@@ -155,7 +160,7 @@ Copy-Item (Join-Path $Root 'payload\status') (Join-Path $Staging 'payload\status
 foreach ($f in Get-ChildItem (Join-Path $Staging 'payload\firstboot'), (Join-Path $Staging 'payload\status') -File) { Write-Lf $f.FullName ([IO.File]::ReadAllText($f.FullName)) }
 
 $yaml = [IO.File]::ReadAllText((Join-Path $Root 'installer\autoinstall.template.yaml'))
-$yaml = $yaml.Replace('__HOSTNAME__', $Hostname).Replace('__USERNAME__', $Username).Replace('__PASSWORD_HASH__', $PwHash).Replace('__SSH_PUBKEY__', $PubKey)
+$yaml = $yaml.Replace('__HOSTNAME__', $Hostname).Replace('__USERNAME__', $Username).Replace('__PASSWORD_HASH__', $PwHash).Replace('__SSH_PUBKEY__', $PubKey.Replace("'", "''"))
 if ($yaml -match '__[A-Z_]+__') { Stop-Here "autoinstall.yaml still has a placeholder: $($Matches[0])" }
 Write-Lf (Join-Path $Staging 'autoinstall.yaml') $yaml
 Ok "Staged in $Staging (the auth key is NOT stored here, it goes straight to the USB)"
@@ -176,12 +181,18 @@ Read-Host 'Press Enter here when Rufus says READY'
 
 # ---------------------------------------------------------------- 6. Find + confirm USB
 Say 'Step 6 of 7: finding the USB'
-$cands = @(Get-Volume | Where-Object { $_.DriveLetter -and $_.DriveType -eq 'Removable' -and (Test-Path ("{0}:\casper" -f $_.DriveLetter)) })
+# Some sticks report as Fixed, so also accept anything on a USB bus.
+$usbLetters = @(Get-Disk | Where-Object { $_.BusType -eq 'USB' } | Get-Partition -ErrorAction SilentlyContinue | Where-Object { $_.DriveLetter } | ForEach-Object { [string]$_.DriveLetter })
+$cands = @(Get-Volume | Where-Object { $_.DriveLetter -and ($_.DriveType -eq 'Removable' -or $usbLetters -contains [string]$_.DriveLetter) -and (Test-Path ("{0}:\casper" -f $_.DriveLetter)) })
 if ($cands.Count -eq 0) { Stop-Here 'No removable drive with a casper folder found. Did Rufus finish, in ISO Image mode?' }
 $vol = $cands[0]
 if ($cands.Count -gt 1) {
   for ($i = 0; $i -lt $cands.Count; $i++) { Write-Host ("  [{0}] {1}:  {2}  {3:N1} GB" -f $i, $cands[$i].DriveLetter, $cands[$i].FileSystemLabel, ($cands[$i].Size/1GB)) }
-  $vol = $cands[[int](Read-Host 'More than one found. Type the number to use')]
+  while ($true) {
+    $pick = (Read-Host 'More than one found. Type the number to use').Trim()
+    if ($pick -match '^\d+$' -and [int]$pick -lt $cands.Count) { $vol = $cands[[int]$pick]; break }
+    Write-Host '  Not one of the numbers above. Try again.' -ForegroundColor Yellow
+  }
 }
 $Usb = "{0}:\" -f $vol.DriveLetter
 Write-Host ''
